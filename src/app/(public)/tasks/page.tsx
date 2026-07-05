@@ -9,7 +9,7 @@ export const metadata = {
   title: "Active Tasks — GroundTruth",
 }
 
-export const revalidate = 60
+export const dynamic = "force-dynamic"
 
 const STATIC_TASKS = [
   {
@@ -34,26 +34,29 @@ const STATIC_TASKS = [
 
 export default async function TasksPage() {
   let tasks: Task[] | null = null
-  let isPreview = false
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const isPreview = !supabaseUrl
 
-  try {
-    const { createClient } = await import("@/lib/supabase/server")
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("status", "active")
-      .order("created_at", { ascending: true })
+  console.log("[tasks] NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? `set (${supabaseUrl.slice(0, 30)}…)` : "MISSING")
 
-    if (!error) {
-      tasks = data as Task[]
+  if (supabaseUrl) {
+    try {
+      const { createClient } = await import("@/lib/supabase/server")
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: true })
+
+      if (error) {
+        console.error("[tasks] Supabase query error:", error.message)
+      } else {
+        tasks = data as Task[]
+      }
+    } catch (err) {
+      console.error("[tasks] Unexpected error:", err)
     }
-  } catch {
-    isPreview = true
-  }
-
-  if (tasks === null) {
-    isPreview = true
   }
 
   return (
