@@ -16,14 +16,6 @@ const signupSchema = z.object({
   consent_privacy: z.literal("true", { error: "You must agree to privacy rules" }),
 })
 
-function buildConsentText(): string {
-  return [
-    "Age confirmed: I confirm I am 18 years of age or older.",
-    "Commercial & AI use agreed: I agree that my approved videos may be used for AI and robotics training purposes.",
-    "Privacy rules agreed: I understand I must not record children, other people, faces, personal documents, IDs, passwords, bills, or any sensitive personal information.",
-  ].join(" | ")
-}
-
 function buildNotes(phone_model: string, payment_method?: string, payment_details?: string): string {
   const lines = [`Phone model: ${phone_model}`]
   if (payment_method) lines.push(`Payment method: ${payment_method}`)
@@ -84,8 +76,11 @@ export async function signupContributor(
       email,
       location: country,
       phone: whatsapp ?? "",
-      consent_text: buildConsentText(),
+      consent_confirmed: true,
       consent_timestamp: new Date().toISOString(),
+      commercial_use_agreed: true,
+      ai_training_use_agreed: true,
+      privacy_rules_agreed: true,
       notes: buildNotes(phone_model, payment_method, payment_details),
       status: "pending",
     }

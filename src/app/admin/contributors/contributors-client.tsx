@@ -163,11 +163,21 @@ function DetailPanel({
       </div>
 
       {/* Consent */}
-      <div className="rounded-xl border border-border p-4 text-sm">
-        <div className="text-muted-foreground text-xs mb-1">
+      <div className="rounded-xl border border-border p-4 text-sm space-y-2">
+        <div className="text-muted-foreground text-xs">
           Consent recorded at {new Date(c.consent_timestamp).toLocaleString()}
         </div>
-        <p className="text-muted-foreground leading-relaxed">{c.consent_text}</p>
+        {[
+          ["Age confirmed (18+)", c.consent_confirmed],
+          ["Commercial & AI use agreed", c.commercial_use_agreed],
+          ["AI training use agreed", c.ai_training_use_agreed],
+          ["Privacy rules agreed", c.privacy_rules_agreed],
+        ].map(([label, value]) => (
+          <div key={label as string} className="flex items-center gap-2">
+            <span className={value ? "text-green-600" : "text-red-500"}>{value ? "✓" : "✗"}</span>
+            <span className={value ? "" : "text-muted-foreground"}>{label as string}</span>
+          </div>
+        ))}
       </div>
 
       {/* Admin notes */}

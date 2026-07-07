@@ -10,8 +10,11 @@ create table if not exists contributors (
   email text not null unique,
   phone text not null default '',
   location text not null,
-  consent_text text not null,
+  consent_confirmed boolean not null default false,
   consent_timestamp timestamptz not null default now(),
+  commercial_use_agreed boolean not null default false,
+  ai_training_use_agreed boolean not null default false,
+  privacy_rules_agreed boolean not null default false,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   notes text,
   created_at timestamptz not null default now()
@@ -170,30 +173,15 @@ values
 on conflict do nothing;
 
 -- Seed contributors
-insert into contributors (name, email, phone, location, consent_text, status)
+insert into contributors (name, email, phone, location, consent_confirmed, commercial_use_agreed, ai_training_use_agreed, privacy_rules_agreed, status)
 values
 (
-  'Alex Rivera',
-  'alex.rivera@example.com',
-  '+1-555-0101',
-  'Austin, TX',
-  'I consent to GroundTruth collecting and using my video footage for AI training purposes.',
-  'approved'
+  'Alex Rivera', 'alex.rivera@example.com', '+1-555-0101', 'Austin, TX', true, true, true, true, 'approved'
 ),
 (
-  'Jordan Kim',
-  'jordan.kim@example.com',
-  '+1-555-0102',
-  'Seattle, WA',
-  'I consent to GroundTruth collecting and using my video footage for AI training purposes.',
-  'approved'
+  'Jordan Kim', 'jordan.kim@example.com', '+1-555-0102', 'Seattle, WA', true, true, true, true, 'approved'
 ),
 (
-  'Sam Patel',
-  'sam.patel@example.com',
-  '+1-555-0103',
-  'Chicago, IL',
-  'I consent to GroundTruth collecting and using my video footage for AI training purposes.',
-  'pending'
+  'Sam Patel', 'sam.patel@example.com', '+1-555-0103', 'Chicago, IL', true, true, true, true, 'pending'
 )
 on conflict (email) do nothing;

@@ -10,8 +10,11 @@ export interface Contributor {
   location: string
   /** Stores WhatsApp number, may be empty string if not provided */
   phone: string
-  consent_text: string
+  consent_confirmed: boolean
   consent_timestamp: string
+  commercial_use_agreed: boolean
+  ai_training_use_agreed: boolean
+  privacy_rules_agreed: boolean
   status: ContributorStatus
   /** Structured text: phone_model, payment_method, payment_details */
   notes: string | null
