@@ -4,26 +4,20 @@ export type SubmissionStatus = "pending" | "approved" | "rejected" | "paid"
 
 export interface Contributor {
   id: string
-  name: string
+  full_name: string
   email: string
-  /** Stores country (e.g. "Indonesia") */
-  location: string
-  /** Stores WhatsApp number, may be empty string if not provided */
-  phone: string
+  country: string
+  phone_model: string
+  whatsapp: string | null
+  payment_method: string | null
+  payment_details: string | null
   consent_confirmed: boolean
   consent_timestamp: string
   commercial_use_agreed: boolean
   ai_training_use_agreed: boolean
   privacy_rules_agreed: boolean
   status: ContributorStatus
-  /** Structured text: phone_model, payment_method, payment_details */
-  notes: string | null
   created_at: string
-  // Optional logical fields parsed from notes
-  whatsapp?: string
-  payment_method?: string
-  payment_details?: string
-  phone_model?: string
 }
 
 export interface Task {

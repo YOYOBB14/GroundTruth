@@ -13,20 +13,6 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "bg-red-100 text-red-800",
 }
 
-/** Parse the structured notes field into key/value pairs */
-function parseNotes(notes: string | null): Record<string, string> {
-  if (!notes) return {}
-  const result: Record<string, string> = {}
-  for (const line of notes.split("\n")) {
-    const idx = line.indexOf(": ")
-    if (idx !== -1) {
-      const key = line.slice(0, idx).trim()
-      const value = line.slice(idx + 2).trim()
-      result[key] = value
-    }
-  }
-  return result
-}
 
 interface Props {
   contributors: Contributor[]
@@ -74,7 +60,7 @@ export function ContributorsClient({ contributors }: Props) {
                 }`}
               >
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-sm font-medium truncate max-w-[160px]">{c.name}</span>
+                  <span className="text-sm font-medium truncate max-w-[160px]">{c.full_name}</span>
                   <span
                     className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${STATUS_COLORS[currentStatus(c)]}`}
                   >
@@ -82,7 +68,7 @@ export function ContributorsClient({ contributors }: Props) {
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{c.email}</div>
-                <div className="text-xs text-muted-foreground">{c.location}</div>
+                <div className="text-xs text-muted-foreground">{c.email}</div>
               </button>
             ))}
           </div>
@@ -125,14 +111,12 @@ function DetailPanel({
   isPending: boolean
   onStatusUpdate: (status: string) => void
 }) {
-  const parsed = parseNotes(c.notes)
-
   const infoRows: [string, string][] = [
-    ["Country", c.location || "—"],
-    ["WhatsApp", c.phone || "Not provided"],
-    ["Phone model", parsed["Phone model"] || "Not provided"],
-    ["Payment method", parsed["Payment method"] || "Not provided"],
-    ["Payment details", parsed["Payment details"] || "Not provided"],
+    ["Country", c.country || "—"],
+    ["WhatsApp", c.whatsapp || "Not provided"],
+    ["Phone model", c.phone_model || "Not provided"],
+    ["Payment method", c.payment_method || "Not provided"],
+    ["Payment details", c.payment_details || "Not provided"],
     ["Signed up", new Date(c.created_at).toLocaleDateString()],
   ]
 
@@ -140,7 +124,7 @@ function DetailPanel({
     <div className="max-w-xl space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">{c.name}</h2>
+          <h2 className="text-lg font-semibold">{c.full_name}</h2>
           <p className="text-sm text-muted-foreground">{c.email}</p>
         </div>
         <span

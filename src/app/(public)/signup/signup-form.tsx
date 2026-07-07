@@ -95,9 +95,9 @@ export function SignupForm() {
       {/* Required fields */}
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="name">Full name</Label>
-          <Input id="name" name="name" placeholder="Alex Rivera" autoComplete="name" />
-          {fe("name") && <p className="text-xs text-destructive">{fe("name")}</p>}
+          <Label htmlFor="full_name">Full name</Label>
+          <Input id="full_name" name="full_name" placeholder="Alex Rivera" autoComplete="name" />
+          {fe("full_name") && <p className="text-xs text-destructive">{fe("full_name")}</p>}
         </div>
 
         <div className="space-y-1.5">

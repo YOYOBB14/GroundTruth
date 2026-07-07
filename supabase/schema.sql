@@ -6,17 +6,19 @@
 -- Contributors table
 create table if not exists contributors (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
+  full_name text not null,
   email text not null unique,
-  phone text not null default '',
-  location text not null,
+  country text not null,
+  phone_model text not null,
+  whatsapp text,
+  payment_method text,
+  payment_details text,
   consent_confirmed boolean not null default false,
   consent_timestamp timestamptz not null default now(),
   commercial_use_agreed boolean not null default false,
   ai_training_use_agreed boolean not null default false,
   privacy_rules_agreed boolean not null default false,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
-  notes text,
   created_at timestamptz not null default now()
 );
 
@@ -173,15 +175,15 @@ values
 on conflict do nothing;
 
 -- Seed contributors
-insert into contributors (name, email, phone, location, consent_confirmed, commercial_use_agreed, ai_training_use_agreed, privacy_rules_agreed, status)
+insert into contributors (full_name, email, country, phone_model, consent_confirmed, commercial_use_agreed, ai_training_use_agreed, privacy_rules_agreed, status)
 values
 (
-  'Alex Rivera', 'alex.rivera@example.com', '+1-555-0101', 'Austin, TX', true, true, true, true, 'approved'
+  'Alex Rivera', 'alex.rivera@example.com', 'United States', 'iPhone 14', true, true, true, true, 'approved'
 ),
 (
-  'Jordan Kim', 'jordan.kim@example.com', '+1-555-0102', 'Seattle, WA', true, true, true, true, 'approved'
+  'Jordan Kim', 'jordan.kim@example.com', 'United States', 'Samsung Galaxy S22', true, true, true, true, 'approved'
 ),
 (
-  'Sam Patel', 'sam.patel@example.com', '+1-555-0103', 'Chicago, IL', true, true, true, true, 'pending'
+  'Sam Patel', 'sam.patel@example.com', 'United States', 'Google Pixel 7', true, true, true, true, 'pending'
 )
 on conflict (email) do nothing;

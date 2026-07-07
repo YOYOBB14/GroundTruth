@@ -4,7 +4,7 @@ import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const signupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  full_name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Enter a valid email address"),
   country: z.string().min(1, "Select your country"),
   phone_model: z.string().min(2, "Enter your phone or camera model"),
@@ -15,13 +15,6 @@ const signupSchema = z.object({
   consent_commercial: z.literal("true", { error: "You must agree to commercial use" }),
   consent_privacy: z.literal("true", { error: "You must agree to privacy rules" }),
 })
-
-function buildNotes(phone_model: string, payment_method?: string, payment_details?: string): string {
-  const lines = [`Phone model: ${phone_model}`]
-  if (payment_method) lines.push(`Payment method: ${payment_method}`)
-  if (payment_details) lines.push(`Payment details: ${payment_details}`)
-  return lines.join("\n")
-}
 
 export type SignupState = {
   success: boolean
@@ -34,7 +27,6 @@ export async function signupContributor(
   formData: FormData
 ): Promise<SignupState> {
   try {
-    // Guard: verify env vars are present before touching Supabase
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     console.log("[signupContributor] env check — url:", supabaseUrl ? "set" : "MISSING", "| service key:", serviceKey ? "set" : "MISSING")
@@ -43,7 +35,7 @@ export async function signupContributor(
     }
 
     const raw = {
-      name: formData.get("name"),
+      full_name: formData.get("full_name"),
       email: formData.get("email"),
       country: formData.get("country"),
       phone_model: formData.get("phone_model"),
@@ -54,7 +46,7 @@ export async function signupContributor(
       consent_commercial: formData.get("consent_commercial"),
       consent_privacy: formData.get("consent_privacy"),
     }
-    console.log("[signupContributor] raw fields — name:", raw.name, "| email:", raw.email, "| country:", raw.country, "| phone_model:", raw.phone_model)
+    console.log("[signupContributor] raw fields — full_name:", raw.full_name, "| email:", raw.email, "| country:", raw.country, "| phone_model:", raw.phone_model)
 
     const result = signupSchema.safeParse(raw)
     if (!result.success) {
@@ -66,25 +58,27 @@ export async function signupContributor(
       return { success: false, fieldErrors }
     }
 
-    const { name, email, country, phone_model, whatsapp, payment_method, payment_details } =
+    const { full_name, email, country, phone_model, whatsapp, payment_method, payment_details } =
       result.data
 
     const supabase = createAdminClient()
 
     const row = {
-      name,
+      full_name,
       email,
-      location: country,
-      phone: whatsapp ?? "",
+      country,
+      phone_model,
+      whatsapp: whatsapp ?? null,
+      payment_method: payment_method ?? null,
+      payment_details: payment_details ?? null,
       consent_confirmed: true,
       consent_timestamp: new Date().toISOString(),
       commercial_use_agreed: true,
       ai_training_use_agreed: true,
       privacy_rules_agreed: true,
-      notes: buildNotes(phone_model, payment_method, payment_details),
       status: "pending",
     }
-    console.log("[signupContributor] inserting row — email:", row.email, "| location:", row.location)
+    console.log("[signupContributor] inserting row — email:", row.email)
 
     const { error } = await supabase.from("contributors").insert(row)
 
