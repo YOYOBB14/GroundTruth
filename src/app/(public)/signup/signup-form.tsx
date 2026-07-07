@@ -52,11 +52,10 @@ const OTHER_COUNTRIES = [
 
 const PAYMENT_OPTIONS = [
   { value: "", label: "Select…", disabled: true },
-  { value: "PayPal", label: "PayPal" },
-  { value: "Wise", label: "Wise" },
-  { value: "Local Bank Transfer", label: "Local Bank Transfer" },
-  { value: "Not sure yet", label: "Not sure yet" },
-  { value: "Other", label: "Other" },
+  { value: "paypal", label: "PayPal" },
+  { value: "wise", label: "Wise" },
+  { value: "local_bank", label: "Local Bank Transfer" },
+  { value: "other", label: "Other" },
 ]
 
 export function SignupForm() {
