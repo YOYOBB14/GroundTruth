@@ -8,6 +8,7 @@ const signupSchema = z.object({
   email: z.string().email("Enter a valid email address"),
   country: z.string().min(1, "Select your country"),
   phone_model: z.string().min(2, "Enter your phone or camera model"),
+  can_record_1080p: z.enum(["yes", "no", "not_sure"], { error: "Please select an option" }),
   whatsapp: z.string().optional(),
   payment_method: z.string().optional(),
   payment_details: z.string().optional(),
@@ -39,6 +40,7 @@ export async function signupContributor(
       email: formData.get("email"),
       country: formData.get("country"),
       phone_model: formData.get("phone_model"),
+      can_record_1080p: formData.get("can_record_1080p"),
       whatsapp: formData.get("whatsapp") || undefined,
       payment_method: formData.get("payment_method") || undefined,
       payment_details: formData.get("payment_details") || undefined,
@@ -58,7 +60,7 @@ export async function signupContributor(
       return { success: false, fieldErrors }
     }
 
-    const { full_name, email, country, phone_model, whatsapp, payment_method, payment_details } =
+    const { full_name, email, country, phone_model, can_record_1080p, whatsapp, payment_method, payment_details } =
       result.data
 
     const supabase = createAdminClient()
@@ -68,6 +70,7 @@ export async function signupContributor(
       email,
       country,
       phone_model,
+      can_record_1080p,
       whatsapp: whatsapp ?? null,
       payment_method: payment_method ?? null,
       payment_details: payment_details ?? null,

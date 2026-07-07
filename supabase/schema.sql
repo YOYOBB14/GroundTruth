@@ -10,6 +10,7 @@ create table if not exists contributors (
   email text not null unique,
   country text not null,
   phone_model text not null,
+  can_record_1080p text not null check (can_record_1080p in ('yes', 'no', 'not_sure')),
   whatsapp text,
   payment_method text,
   payment_details text,

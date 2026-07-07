@@ -135,6 +135,30 @@ export function SignupForm() {
         </div>
       </div>
 
+      {/* 1080p capability */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium leading-none">Can you record in 1080p?</p>
+        <div className="flex gap-6">
+          {[
+            { value: "yes", label: "Yes" },
+            { value: "no", label: "No" },
+            { value: "not_sure", label: "Not sure" },
+          ].map(({ value, label }) => (
+            <label key={value} className="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="radio"
+                name="can_record_1080p"
+                value={value}
+                required
+                className="size-4 accent-indigo-600"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+        {fe("can_record_1080p") && <p className="text-xs text-destructive">{fe("can_record_1080p")}</p>}
+      </div>
+
       {/* Optional fields */}
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-1.5">

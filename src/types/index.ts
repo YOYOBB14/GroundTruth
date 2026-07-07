@@ -8,6 +8,7 @@ export interface Contributor {
   email: string
   country: string
   phone_model: string
+  can_record_1080p: "yes" | "no" | "not_sure"
   whatsapp: string | null
   payment_method: string | null
   payment_details: string | null
