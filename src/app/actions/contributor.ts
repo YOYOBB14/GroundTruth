@@ -41,51 +41,70 @@ export async function signupContributor(
   _prev: SignupState,
   formData: FormData
 ): Promise<SignupState> {
-  const raw = {
-    name: formData.get("name"),
-    email: formData.get("email"),
-    country: formData.get("country"),
-    phone_model: formData.get("phone_model"),
-    whatsapp: formData.get("whatsapp") || undefined,
-    payment_method: formData.get("payment_method") || undefined,
-    payment_details: formData.get("payment_details") || undefined,
-    consent_age: formData.get("consent_age"),
-    consent_commercial: formData.get("consent_commercial"),
-    consent_privacy: formData.get("consent_privacy"),
-  }
-
-  const result = signupSchema.safeParse(raw)
-  if (!result.success) {
-    const fieldErrors: Record<string, string[]> = {}
-    for (const [key, issues] of Object.entries(result.error.flatten().fieldErrors)) {
-      fieldErrors[key] = issues ?? []
+  try {
+    // Guard: verify env vars are present before touching Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    console.log("[signupContributor] env check — url:", supabaseUrl ? "set" : "MISSING", "| service key:", serviceKey ? "set" : "MISSING")
+    if (!supabaseUrl || !serviceKey) {
+      return { success: false, error: "Supabase not configured" }
     }
-    return { success: false, fieldErrors }
-  }
 
-  const { name, email, country, phone_model, whatsapp, payment_method, payment_details } =
-    result.data
-
-  const supabase = createAdminClient()
-
-  const { error } = await supabase.from("contributors").insert({
-    name,
-    email,
-    location: country,
-    phone: whatsapp ?? "",
-    consent_text: buildConsentText(),
-    consent_timestamp: new Date().toISOString(),
-    notes: buildNotes(phone_model, payment_method, payment_details),
-    status: "pending",
-  })
-
-  if (error) {
-    console.error("[signupContributor] Supabase error:", error.code, error.message, error.details, error.hint)
-    if (error.code === "23505") {
-      return { success: false, error: "This email is already registered." }
+    const raw = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      country: formData.get("country"),
+      phone_model: formData.get("phone_model"),
+      whatsapp: formData.get("whatsapp") || undefined,
+      payment_method: formData.get("payment_method") || undefined,
+      payment_details: formData.get("payment_details") || undefined,
+      consent_age: formData.get("consent_age"),
+      consent_commercial: formData.get("consent_commercial"),
+      consent_privacy: formData.get("consent_privacy"),
     }
-    return { success: false, error: "Something went wrong. Please try again." }
-  }
+    console.log("[signupContributor] raw fields — name:", raw.name, "| email:", raw.email, "| country:", raw.country, "| phone_model:", raw.phone_model)
 
-  return { success: true }
+    const result = signupSchema.safeParse(raw)
+    if (!result.success) {
+      const fieldErrors: Record<string, string[]> = {}
+      for (const [key, issues] of Object.entries(result.error.flatten().fieldErrors)) {
+        fieldErrors[key] = issues ?? []
+      }
+      console.log("[signupContributor] validation failed:", JSON.stringify(fieldErrors))
+      return { success: false, fieldErrors }
+    }
+
+    const { name, email, country, phone_model, whatsapp, payment_method, payment_details } =
+      result.data
+
+    const supabase = createAdminClient()
+
+    const row = {
+      name,
+      email,
+      location: country,
+      phone: whatsapp ?? "",
+      consent_text: buildConsentText(),
+      consent_timestamp: new Date().toISOString(),
+      notes: buildNotes(phone_model, payment_method, payment_details),
+      status: "pending",
+    }
+    console.log("[signupContributor] inserting row — email:", row.email, "| location:", row.location)
+
+    const { error } = await supabase.from("contributors").insert(row)
+
+    if (error) {
+      console.error("[signupContributor] Supabase insert error — code:", error.code, "| message:", error.message, "| details:", error.details, "| hint:", error.hint)
+      if (error.code === "23505") {
+        return { success: false, error: "This email is already registered." }
+      }
+      return { success: false, error: `Insert failed: ${error.message}` }
+    }
+
+    console.log("[signupContributor] success — email:", email)
+    return { success: true }
+  } catch (err) {
+    console.error("[signupContributor] unexpected exception:", err instanceof Error ? err.stack : String(err))
+    return { success: false, error: `Unexpected error: ${err instanceof Error ? err.message : String(err)}` }
+  }
 }
