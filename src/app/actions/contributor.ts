@@ -73,8 +73,6 @@ export async function signupContributor(
     email,
     location: country,
     phone: whatsapp ?? "",
-    age: 18,
-    gender: "Not specified",
     consent_text: buildConsentText(),
     consent_timestamp: new Date().toISOString(),
     notes: buildNotes(phone_model, payment_method, payment_details),
@@ -82,6 +80,7 @@ export async function signupContributor(
   })
 
   if (error) {
+    console.error("[signupContributor] Supabase error:", error.code, error.message, error.details, error.hint)
     if (error.code === "23505") {
       return { success: false, error: "This email is already registered." }
     }

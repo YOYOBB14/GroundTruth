@@ -8,9 +8,7 @@ create table if not exists contributors (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text not null unique,
-  phone text not null,
-  age integer not null check (age >= 18 and age <= 100),
-  gender text not null,
+  phone text not null default '',
   location text not null,
   consent_text text not null,
   consent_timestamp timestamptz not null default now(),
@@ -172,14 +170,12 @@ values
 on conflict do nothing;
 
 -- Seed contributors
-insert into contributors (name, email, phone, age, gender, location, consent_text, status)
+insert into contributors (name, email, phone, location, consent_text, status)
 values
 (
   'Alex Rivera',
   'alex.rivera@example.com',
   '+1-555-0101',
-  28,
-  'Male',
   'Austin, TX',
   'I consent to GroundTruth collecting and using my video footage for AI training purposes.',
   'approved'
@@ -188,8 +184,6 @@ values
   'Jordan Kim',
   'jordan.kim@example.com',
   '+1-555-0102',
-  34,
-  'Female',
   'Seattle, WA',
   'I consent to GroundTruth collecting and using my video footage for AI training purposes.',
   'approved'
@@ -198,8 +192,6 @@ values
   'Sam Patel',
   'sam.patel@example.com',
   '+1-555-0103',
-  22,
-  'Non-binary',
   'Chicago, IL',
   'I consent to GroundTruth collecting and using my video footage for AI training purposes.',
   'pending'
