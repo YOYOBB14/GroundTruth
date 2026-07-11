@@ -12,7 +12,6 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "bg-red-100 text-red-800",
 }
 
-
 interface Props {
   contributors: Contributor[]
 }
@@ -21,15 +20,22 @@ export function ContributorsClient({ contributors }: Props) {
   const [selected, setSelected] = useState<Contributor | null>(null)
   const [isPending, startTransition] = useTransition()
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({})
+  const [actionError, setActionError] = useState<string | null>(null)
 
   function selectContributor(c: Contributor) {
     setSelected(c)
+    setActionError(null)
   }
 
   function handleStatusUpdate(status: string) {
     if (!selected) return
+    setActionError(null)
     startTransition(async () => {
-      await updateContributorStatus(selected.id, status)
+      const result = await updateContributorStatus(selected.id, status)
+      if (result?.error) {
+        setActionError(result.error)
+        return
+      }
       setLocalStatuses((prev) => ({ ...prev, [selected.id]: status }))
       setSelected((prev) =>
         prev ? { ...prev, status: status as Contributor["status"] } : null
@@ -64,7 +70,7 @@ export function ContributorsClient({ contributors }: Props) {
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{c.email}</div>
-                <div className="text-xs text-muted-foreground">{c.email}</div>
+                <div className="text-xs text-muted-foreground">{c.country}</div>
               </button>
             ))}
           </div>
@@ -82,6 +88,7 @@ export function ContributorsClient({ contributors }: Props) {
             contributor={selected}
             currentStatus={currentStatus(selected)}
             isPending={isPending}
+            actionError={actionError}
             onStatusUpdate={handleStatusUpdate}
           />
         )}
@@ -94,17 +101,20 @@ function DetailPanel({
   contributor: c,
   currentStatus,
   isPending,
+  actionError,
   onStatusUpdate,
 }: {
   contributor: Contributor
   currentStatus: string
   isPending: boolean
+  actionError: string | null
   onStatusUpdate: (status: string) => void
 }) {
   const infoRows: [string, string][] = [
     ["Country", c.country || "—"],
     ["WhatsApp", c.whatsapp || "Not provided"],
     ["Phone model", c.phone_model || "Not provided"],
+    ["Can record 1080p", c.can_record_1080p || "Not provided"],
     ["Payment method", c.payment_method || "Not provided"],
     ["Payment details", c.payment_details || "Not provided"],
     ["Signed up", new Date(c.created_at).toLocaleDateString()],
@@ -155,6 +165,11 @@ function DetailPanel({
       </div>
 
       {/* Status actions */}
+      {actionError && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Failed to update status: {actionError}
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         {["approved", "rejected", "pending"].map((status) => (
           <Button

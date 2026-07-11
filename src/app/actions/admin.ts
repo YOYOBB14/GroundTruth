@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { AdminSession } from "@/types"
 
@@ -38,25 +39,35 @@ export async function updateSubmissionStatus(
   submissionId: string,
   status: string,
   notes?: string
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from("submissions")
     .update({ status, notes: notes ?? null, updated_at: new Date().toISOString() })
     .eq("id", submissionId)
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("[updateSubmissionStatus]", error.message)
+    return { error: error.message }
+  }
+  revalidatePath("/admin/submissions")
+  revalidatePath("/admin")
 }
 
 export async function updateContributorStatus(
   contributorId: string,
   status: string,
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from("contributors")
     .update({ status })
     .eq("id", contributorId)
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("[updateContributorStatus]", error.message)
+    return { error: error.message }
+  }
+  revalidatePath("/admin/contributors")
+  revalidatePath("/admin")
 }
 
 export async function createTask(formData: FormData) {
@@ -77,6 +88,8 @@ export async function createTask(formData: FormData) {
   })
 
   if (error) throw new Error(error.message)
+  revalidatePath("/admin/tasks")
+  revalidatePath("/admin")
 }
 
 export async function updateTask(taskId: string, formData: FormData) {
@@ -101,4 +114,6 @@ export async function updateTask(taskId: string, formData: FormData) {
     .eq("id", taskId)
 
   if (error) throw new Error(error.message)
+  revalidatePath("/admin/tasks")
+  revalidatePath("/admin")
 }

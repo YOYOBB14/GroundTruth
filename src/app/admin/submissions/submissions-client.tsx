@@ -26,6 +26,7 @@ export function SubmissionsClient({ submissions }: Props) {
   const [videoLoading, setVideoLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({})
+  const [actionError, setActionError] = useState<string | null>(null)
 
   async function loadVideo(storagePath: string) {
     setVideoLoading(true)
@@ -40,13 +41,19 @@ export function SubmissionsClient({ submissions }: Props) {
     setSelected(s)
     setNotes(s.notes ?? "")
     setVideoUrl("")
+    setActionError(null)
     loadVideo(s.storage_path)
   }
 
   function handleStatusUpdate(status: string) {
     if (!selected) return
+    setActionError(null)
     startTransition(async () => {
-      await updateSubmissionStatus(selected.id, status, notes)
+      const result = await updateSubmissionStatus(selected.id, status, notes)
+      if (result?.error) {
+        setActionError(result.error)
+        return
+      }
       setLocalStatuses((prev) => ({ ...prev, [selected.id]: status }))
       setSelected((prev) => prev ? { ...prev, status: status as Submission["status"], notes } : null)
     })
@@ -146,6 +153,11 @@ export function SubmissionsClient({ submissions }: Props) {
             </div>
 
             {/* Actions */}
+            {actionError && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                Failed to update status: {actionError}
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
               {["approved", "rejected", "paid", "pending"].map((status) => (
                 <Button
