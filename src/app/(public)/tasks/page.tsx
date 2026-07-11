@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/lib/supabase/server"
 import type { Task } from "@/types"
 
 export const metadata = {
@@ -11,67 +12,22 @@ export const metadata = {
 
 export const dynamic = "force-dynamic"
 
-const STATIC_TASKS = [
-  {
-    id: "static-1",
-    title: "Wash Dishes",
-    description: "Record yourself washing dishes from start to finish.",
-    duration: "5–10 minutes",
-  },
-  {
-    id: "static-2",
-    title: "Fold Laundry",
-    description: "Fold at least 8–10 clean clothing items on a flat surface.",
-    duration: "5–8 minutes",
-  },
-  {
-    id: "static-3",
-    title: "Organize Shelves",
-    description: "Organize items on a kitchen shelf or cabinet.",
-    duration: "5–10 minutes",
-  },
-]
-
 export default async function TasksPage() {
-  let tasks: Task[] | null = null
-  let fetchError: string | null = null
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const isPreview = !supabaseUrl
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: true })
 
-  if (supabaseUrl) {
-    try {
-      // Use the service role client so the read isn't blocked by RLS.
-      // We enforce the same restriction (status = 'active') in the query,
-      // and this code only ever runs server-side — the key is never exposed.
-      const { createAdminClient } = await import("@/lib/supabase/admin")
-      const supabase = createAdminClient()
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("status", "active")
-        .order("created_at", { ascending: true })
-
-      if (error) {
-        console.error("[tasks] Supabase error:", error.code, error.message)
-        fetchError = error.message
-      } else {
-        console.log("[tasks] Loaded", data?.length ?? 0, "active tasks")
-        tasks = data as Task[]
-      }
-    } catch (err) {
-      console.error("[tasks] Unexpected error:", err)
-      fetchError = err instanceof Error ? err.message : "Unexpected error"
-    }
+  if (error) {
+    console.error("[tasks] Supabase error:", error.code, error.message)
   }
+
+  const tasks = (data ?? []) as Task[]
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      {isPreview && (
-        <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-          Preview mode — connect Supabase to load live tasks
-        </div>
-      )}
-
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Active Tasks</h1>
         <p className="text-muted-foreground">
@@ -79,37 +35,12 @@ export default async function TasksPage() {
         </p>
       </div>
 
-      {isPreview ? (
-        <div className="space-y-4">
-          {STATIC_TASKS.map((task) => (
-            <div key={task.id} className="rounded-xl border border-border p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="font-semibold text-base">{task.title}</h2>
-                    <Badge variant="secondary" className="text-xs">
-                      Reward: Available
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">{task.duration}</p>
-                  <p className="text-sm text-muted-foreground">{task.description}</p>
-                </div>
-                <Link
-                  href="/tasks"
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-shrink-0")}
-                >
-                  View Task
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : fetchError ? (
+      {error ? (
         <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
           <p className="font-medium mb-1">Could not load tasks</p>
           <p className="text-sm">Please try again in a moment.</p>
         </div>
-      ) : !tasks || tasks.length === 0 ? (
+      ) : tasks.length === 0 ? (
         <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
           <p className="font-medium mb-1">No active tasks right now</p>
           <p className="text-sm">Check back soon — new tasks are posted regularly.</p>
@@ -129,7 +60,7 @@ export default async function TasksPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="font-semibold text-base">{task.title}</h2>
                       <Badge variant="secondary" className="text-xs">
-                        Reward: Available
+                        ${task.reward_usd} per video
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">{task.description}</p>

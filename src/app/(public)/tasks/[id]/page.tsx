@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
 import { TaskUploadClient } from "./task-upload-client"
 import type { Task } from "@/types"
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const supabase = createAdminClient()
+  const supabase = createClient()
   const { data } = await supabase.from("tasks").select("title").eq("id", params.id).single()
   return { title: data ? `${data.title} — GroundTruth` : "Task — GroundTruth" }
 }
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props) {
 export const revalidate = 60
 
 export default async function TaskDetailPage({ params }: Props) {
-  const supabase = createAdminClient()
+  const supabase = createClient()
   const { data: task, error } = await supabase
     .from("tasks")
     .select("*")
