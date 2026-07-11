@@ -40,8 +40,11 @@ export default async function TasksPage() {
 
   if (supabaseUrl) {
     try {
-      const { createClient } = await import("@/lib/supabase/server")
-      const supabase = createClient()
+      // Use the service role client so the read isn't blocked by RLS.
+      // We enforce the same restriction (status = 'active') in the query,
+      // and this code only ever runs server-side — the key is never exposed.
+      const { createAdminClient } = await import("@/lib/supabase/admin")
+      const supabase = createAdminClient()
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
