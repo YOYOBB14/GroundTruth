@@ -5,35 +5,59 @@ import { Video, Users, ListChecks, CheckCircle, Clock, XCircle } from "lucide-re
 
 export const metadata = { title: "Dashboard — GroundTruth Admin" }
 
+const ZERO_STATS = {
+  totalContributors: 0,
+  pendingContributors: 0,
+  totalSubmissions: 0,
+  pendingSubmissions: 0,
+  approvedSubmissions: 0,
+  rejectedSubmissions: 0,
+  activeTasks: 0,
+  error: null as string | null,
+}
+
 async function getStats() {
-  const supabase = createAdminClient()
+  try {
+    const supabase = createAdminClient()
 
-  const [
-    { count: totalContributors },
-    { count: pendingContributors },
-    { count: totalSubmissions },
-    { count: pendingSubmissions },
-    { count: approvedSubmissions },
-    { count: rejectedSubmissions },
-    { count: activeTasks },
-  ] = await Promise.all([
-    supabase.from("contributors").select("*", { count: "exact", head: true }),
-    supabase.from("contributors").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("submissions").select("*", { count: "exact", head: true }),
-    supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "approved"),
-    supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "rejected"),
-    supabase.from("tasks").select("*", { count: "exact", head: true }).eq("status", "active"),
-  ])
+    const [
+      { count: totalContributors, error: e1 },
+      { count: pendingContributors, error: e2 },
+      { count: totalSubmissions, error: e3 },
+      { count: pendingSubmissions, error: e4 },
+      { count: approvedSubmissions, error: e5 },
+      { count: rejectedSubmissions, error: e6 },
+      { count: activeTasks, error: e7 },
+    ] = await Promise.all([
+      supabase.from("contributors").select("*", { count: "exact", head: true }),
+      supabase.from("contributors").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("submissions").select("*", { count: "exact", head: true }),
+      supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "approved"),
+      supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "rejected"),
+      supabase.from("tasks").select("*", { count: "exact", head: true }).eq("status", "active"),
+    ])
 
-  return {
-    totalContributors: totalContributors ?? 0,
-    pendingContributors: pendingContributors ?? 0,
-    totalSubmissions: totalSubmissions ?? 0,
-    pendingSubmissions: pendingSubmissions ?? 0,
-    approvedSubmissions: approvedSubmissions ?? 0,
-    rejectedSubmissions: rejectedSubmissions ?? 0,
-    activeTasks: activeTasks ?? 0,
+    const firstError = e1 ?? e2 ?? e3 ?? e4 ?? e5 ?? e6 ?? e7
+    if (firstError) {
+      console.error("[admin/getStats] Supabase error:", firstError.message)
+      return { ...ZERO_STATS, error: firstError.message }
+    }
+
+    return {
+      totalContributors: totalContributors ?? 0,
+      pendingContributors: pendingContributors ?? 0,
+      totalSubmissions: totalSubmissions ?? 0,
+      pendingSubmissions: pendingSubmissions ?? 0,
+      approvedSubmissions: approvedSubmissions ?? 0,
+      rejectedSubmissions: rejectedSubmissions ?? 0,
+      activeTasks: activeTasks ?? 0,
+      error: null,
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error"
+    console.error("[admin/getStats] Unexpected error:", message)
+    return { ...ZERO_STATS, error: message }
   }
 }
 
@@ -43,6 +67,12 @@ export default async function AdminDashboard() {
   return (
     <div className="p-8 max-w-4xl">
       <h1 className="text-2xl font-bold tracking-tight mb-8">Dashboard</h1>
+
+      {stats.error && (
+        <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Failed to load stats: {stats.error}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
         <StatCard label="Total submissions" value={stats.totalSubmissions} icon={<Video className="size-4" />} />

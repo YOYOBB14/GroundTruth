@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react"
 import { updateContributorStatus } from "@/app/actions/admin"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import type { Contributor } from "@/types"
 
@@ -20,20 +19,17 @@ interface Props {
 
 export function ContributorsClient({ contributors }: Props) {
   const [selected, setSelected] = useState<Contributor | null>(null)
-  const [adminNotes, setAdminNotes] = useState("")
   const [isPending, startTransition] = useTransition()
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({})
 
   function selectContributor(c: Contributor) {
     setSelected(c)
-    // Don't pre-fill notes — those are structured data; let admin add separate notes
-    setAdminNotes("")
   }
 
   function handleStatusUpdate(status: string) {
     if (!selected) return
     startTransition(async () => {
-      await updateContributorStatus(selected.id, status, adminNotes || undefined)
+      await updateContributorStatus(selected.id, status)
       setLocalStatuses((prev) => ({ ...prev, [selected.id]: status }))
       setSelected((prev) =>
         prev ? { ...prev, status: status as Contributor["status"] } : null
@@ -85,8 +81,6 @@ export function ContributorsClient({ contributors }: Props) {
           <DetailPanel
             contributor={selected}
             currentStatus={currentStatus(selected)}
-            adminNotes={adminNotes}
-            setAdminNotes={setAdminNotes}
             isPending={isPending}
             onStatusUpdate={handleStatusUpdate}
           />
@@ -99,15 +93,11 @@ export function ContributorsClient({ contributors }: Props) {
 function DetailPanel({
   contributor: c,
   currentStatus,
-  adminNotes,
-  setAdminNotes,
   isPending,
   onStatusUpdate,
 }: {
   contributor: Contributor
   currentStatus: string
-  adminNotes: string
-  setAdminNotes: (v: string) => void
   isPending: boolean
   onStatusUpdate: (status: string) => void
 }) {
@@ -162,17 +152,6 @@ function DetailPanel({
             <span className={value ? "" : "text-muted-foreground"}>{label as string}</span>
           </div>
         ))}
-      </div>
-
-      {/* Admin notes */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Admin notes</label>
-        <Textarea
-          value={adminNotes}
-          onChange={(e) => setAdminNotes(e.target.value)}
-          placeholder="Internal notes (not shown to contributor)…"
-          rows={3}
-        />
       </div>
 
       {/* Status actions */}

@@ -50,12 +50,11 @@ export async function updateSubmissionStatus(
 export async function updateContributorStatus(
   contributorId: string,
   status: string,
-  notes?: string
 ) {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from("contributors")
-    .update({ status, notes: notes ?? null })
+    .update({ status })
     .eq("id", contributorId)
   if (error) throw new Error(error.message)
 }
