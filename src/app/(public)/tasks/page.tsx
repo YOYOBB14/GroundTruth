@@ -13,12 +13,22 @@ export const metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function TasksPage() {
+  // --- DIAGNOSTIC START (remove after diagnosis) ---
+  console.log("[DIAG] NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 20))
+  console.log("[DIAG] NEXT_PUBLIC_SUPABASE_ANON_KEY defined:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  console.log("[DIAG] query: tasks.select(*).eq(status, active).order(created_at, asc)")
+  // --- DIAGNOSTIC END ---
+
   const supabase = createClient()
   const { data, error } = await supabase
     .from("tasks")
     .select("*")
     .eq("status", "active")
     .order("created_at", { ascending: true })
+
+  // --- DIAGNOSTIC START (remove after diagnosis) ---
+  console.log("[DIAG] TASKS QUERY result:", JSON.stringify({ data, error }, null, 2))
+  // --- DIAGNOSTIC END ---
 
   if (error) {
     console.error("[tasks] Supabase error:", error.code, error.message)
