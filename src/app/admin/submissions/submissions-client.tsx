@@ -32,7 +32,7 @@ export function SubmissionsClient({ submissions }: Props) {
     setVideoLoading(true)
     setVideoUrl("")
     const supabase = createClient()
-    const { data } = await supabase.storage.from("videos").createSignedUrl(storagePath, 3600)
+    const { data } = await supabase.storage.from("submissions").createSignedUrl(storagePath, 3600)
     setVideoUrl(data?.signedUrl ?? "")
     setVideoLoading(false)
   }

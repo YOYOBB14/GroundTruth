@@ -72,7 +72,7 @@ export function TaskUploadClient({ task }: Props) {
       const supabase = createClient()
       const path = `${task.id}/${email}/${Date.now()}-${file.name.replace(/\s+/g, "_")}`
 
-      const { error } = await supabase.storage.from("videos").upload(path, file, {
+      const { error } = await supabase.storage.from("submissions").upload(path, file, {
         cacheControl: "3600",
         upsert: false,
       })

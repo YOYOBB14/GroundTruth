@@ -129,7 +129,7 @@ create policy "contributors can read own submissions"
 -- ============================================================
 -- Storage bucket (run separately or via dashboard)
 -- ============================================================
--- insert into storage.buckets (id, name, public) values ('videos', 'videos', false);
+-- insert into storage.buckets (id, name, public) values ('submissions', 'submissions', false);
 
 -- ============================================================
 -- Seed Data
