@@ -39,7 +39,7 @@ export async function verifyContributorEmail(
 
   const { data: contributor, error: contribError } = await supabase
     .from("contributors")
-    .select("name, email, status")
+    .select("full_name, email, status")
     .eq("email", email)
     .single()
 
@@ -66,7 +66,7 @@ export async function verifyContributorEmail(
     }
   }
 
-  return { ok: true, contributorName: contributor.name }
+  return { ok: true, contributorName: contributor.full_name }
 }
 
 export type SubmitVideoState = {
