@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic"
+export const revalidate = 0
 import Link from "next/link"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { Video, Users, ListChecks, CheckCircle, Clock, XCircle } from "lucide-react"

@@ -1,6 +1,7 @@
 "use server"
 
 import { z } from "zod"
+import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 // Converts any empty / whitespace-only form value to null so nullable DB
@@ -118,6 +119,8 @@ export async function signupContributor(
       return { success: false, error: `Insert failed: ${error.message}` }
     }
 
+    revalidatePath("/admin/contributors")
+    revalidatePath("/admin")
     console.log("[signupContributor] success —", email)
     return { success: true }
   } catch (err) {
