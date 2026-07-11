@@ -34,10 +34,9 @@ const STATIC_TASKS = [
 
 export default async function TasksPage() {
   let tasks: Task[] | null = null
+  let fetchError: string | null = null
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const isPreview = !supabaseUrl
-
-  console.log("[tasks] NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? `set (${supabaseUrl.slice(0, 30)}…)` : "MISSING")
 
   if (supabaseUrl) {
     try {
@@ -50,12 +49,15 @@ export default async function TasksPage() {
         .order("created_at", { ascending: true })
 
       if (error) {
-        console.error("[tasks] Supabase query error:", error.message)
+        console.error("[tasks] Supabase error:", error.code, error.message)
+        fetchError = error.message
       } else {
+        console.log("[tasks] Loaded", data?.length ?? 0, "active tasks")
         tasks = data as Task[]
       }
     } catch (err) {
       console.error("[tasks] Unexpected error:", err)
+      fetchError = err instanceof Error ? err.message : "Unexpected error"
     }
   }
 
@@ -98,6 +100,11 @@ export default async function TasksPage() {
               </div>
             </div>
           ))}
+        </div>
+      ) : fetchError ? (
+        <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
+          <p className="font-medium mb-1">Could not load tasks</p>
+          <p className="text-sm">Please try again in a moment.</p>
         </div>
       ) : !tasks || tasks.length === 0 ? (
         <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
